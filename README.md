@@ -4,18 +4,24 @@ Group 27's Statistical Programming project repository.
 
 ## Repository migration — 18 October 2026
 
-Our project was originally developed in [chantalshen1213-dev/statistical_programming_group27](https://github.com/chantalshen1213-dev/statistical_programming_group27).
+This project was originally developed in [chantalshen1213-dev/statistical_programming_group27](https://github.com/chantalshen1213-dev/statistical_programming_group27).
 
-According to the team, Tong Shen lost access to the Gmail account associated with her former GitHub account because of regional restrictions. To ensure continued access and collaboration, the team is moving its work to [gzr142257/ESP_Group_27](https://github.com/gzr142257/ESP_Group_27).
+According to the team, Tong Shen lost access to the Gmail account associated with her former GitHub account because of regional restrictions. To ensure continued access and collaboration, the project files have been copied to [gzr142257/ESP_Group_27](https://github.com/gzr142257/ESP_Group_27).
 
 Tong Shen's current GitHub account is [@TongShen13](https://github.com/TongShen13); her former account was `chantalshen1213-dev`. Contributions made under the former account should continue to be credited to Tong Shen.
 
-## Migration status and contribution history
+## Contribution history
 
-This migration notice has been added. The original project files and Git history have **not yet been imported**. The original repository was accessible in a signed-in browser and showed 12 commits at the time of inspection, but it is private and unavailable through the current migration connection.
+For contribution records and the original commit history, please see the [original repository](https://github.com/chantalshen1213-dev/statistical_programming_group27).
 
-The project should be migrated from an existing Git clone with its full `.git` history. Preserve the original commits, author information and dates, and merge this repository's README commit rather than replacing the original history with a single file-upload commit.
+贡献记录见[原仓库](https://github.com/chantalshen1213-dev/statistical_programming_group27)。
 
-Original commit authorship must remain unchanged. Documenting the account change here does not automatically reassign old commits or profile contribution counts to `TongShen13`.
+The project files were copied as a snapshot of the original `main` branch (`05ede475f4227e68673d87dad68d5ca6574d0db7`). Historical commits were not imported into this repository. The original repository is private; access to its contribution records requires permission.
 
-Future work should be committed to this repository once the import is complete.
+## Project files
+
+- `proj1.R`: integrated project script.
+- `palestrina.txt`: original project dataset.
+- `working_files/`: individual task scripts retained from the original repository.
+
+Future development and collaboration should take place in this repository.
