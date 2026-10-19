@@ -158,9 +158,8 @@ pwin <- function(a, b, p = 0.5, nreps = 10000) {
 # simulate_hits()
 # duel()
 # pwin()
-#----------------------------------------------------------------------
+
 # Task 4 ewait: exact expected waiting time (self‑overlap formula)
-#----------------------------------------------------------------------
 ewait <- function(a, p = 0.5) {
   # Purpose: calculate the exact expected wait for one pattern in isolation.
   # Inputs: binary pattern a and heads probability p.
@@ -183,11 +182,9 @@ ewait <- function(a, p = 0.5) {
   expected
 }
 
-#----------------------------------------------------------------------
 # Helper: generate all k‑length binary patterns, fixed documented ordering
 # Output matrix: each row = pattern vector 0/1; rownames H/T labels
 # Order(k=3): TTT,TTH,THT,THH,HTT,HTH,HHT,HHH
-#----------------------------------------------------------------------
 all_patterns <- function(k = 3) {
   if (!is.numeric(k) || length(k) != 1 || !is.finite(k) ||
       k < 1 || k != floor(k)) {
@@ -204,11 +201,9 @@ all_patterns <- function(k = 3) {
   patterns
 }
 
-#----------------------------------------------------------------------
 # Task5 pmat: full 2^k × 2^k duel win‑probability matrix
 # P[i,j] = probability pattern i beats pattern j; diagonal NA
 # Exploit P[j,i] = 1‑P[i,j] to halve simulation workload
-#----------------------------------------------------------------------
 pmat <- function(k = 3, p = 0.5, nreps = 10000) {
   check_simulation(p, nreps)
   patterns <- all_patterns(k)
@@ -224,9 +219,7 @@ pmat <- function(k = 3, p = 0.5, nreps = 10000) {
   P
 }
 
-#----------------------------------------------------------------------
 # 5(a) helper: get best‑reply for each opponent pattern
-#----------------------------------------------------------------------
 best_replies <- function(P) {
   reply <- integer(ncol(P))
   for (j in seq_len(ncol(P))) reply[j] <- which.max(P[, j])
@@ -238,9 +231,7 @@ best_replies <- function(P) {
   )
 }
 
-#----------------------------------------------------------------------
 # 5(b) helper: find approximately evenly‑matched pairs
-#----------------------------------------------------------------------
 balanced_pairs <- function(P, tolerance = 0.02) {
   pairs <- which(upper.tri(P) & abs(P - 0.5) <= tolerance, arr.ind = TRUE)
   data.frame(
@@ -251,9 +242,7 @@ balanced_pairs <- function(P, tolerance = 0.02) {
   )
 }
 
-#----------------------------------------------------------------------
 # 5(b) helper: BFS search shortest non‑transitive win cycle
-#----------------------------------------------------------------------
 find_cycle <- function(P, margin = 0.05) {
   n <- nrow(P)
   shortest <- integer(0)
@@ -303,9 +292,7 @@ show_cycle <- function(P, margin = 0.05) {
   invisible(NULL)
 }
 
-#----------------------------------------------------------------------
 # 5(c) helper: find example pair with identical ewait but asymmetric duel
-#----------------------------------------------------------------------
 same_wait_example <- function(P, waits) {
   difference <- abs(outer(waits, waits, "-"))
   pairs <- which(upper.tri(P) & difference < 1e-10, arr.ind = TRUE)
@@ -319,9 +306,7 @@ same_wait_example <- function(P, waits) {
   )
 }
 
-#----------------------------------------------------------------------
-# Experiment execution: Task4 validation, Task5 a/b/c, Task6 plot PDF, Task7 biased‑coin analysis
-#----------------------------------------------------------------------
+# Experiment execution
 run_start <- proc.time()[["elapsed"]]
 set.seed(27)
 
