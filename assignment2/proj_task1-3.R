@@ -143,10 +143,244 @@ duel <- function(a, b, p = 0.5) {
 
 # Step 3
 pwin <- function(a, b, p = 0.5, nreps = 10000) {
-  # Purpose: estimate the probability that a beats b on a shared toss stream.
-  # Inputs: distinct equal-length patterns a and b, p, and a replication count.
-  # Output: a single Monte Carlo win-probability estimate.
-  # Approach: average a's win indicators across independent simulated duels.
+# Purpose: estimate the probability that a beats b on a shared toss stream.
+# Inputs: distinct equal-length patterns a and b, p, and a replication count.
+# Output: a single Monte Carlo win-probability estimate.
+# Approach: average a's win indicators across independent simulated duels.
   results <- simulate_hits(a, b, p, nreps)
   mean(results[, "winner"])
 }
+
+
+# check_pattern()
+# check_simulation()
+# firsthit()
+# simulate_hits()
+# duel()
+# pwin()
+#----------------------------------------------------------------------
+# Task 4 ewait: exact expected waiting time (self‑overlap formula)
+#----------------------------------------------------------------------
+ewait <- function(a, p = 0.5) {
+  # Purpose: calculate the exact expected wait for one pattern in isolation.
+  # Inputs: binary pattern a and heads probability p.
+  # Output: its expected completion time, measured from the start of a stream.
+  # Approach: for each matching prefix and suffix of length j, add the inverse
+  # prefix probability. Full‑length overlap always contributes to the sum.
+  check_pattern(a)
+  check_simulation(p, 1)
+  k <- length(a)
+  expected <- 0
+  for (j in seq_len(k)) {
+    prefix <- a[seq_len(j)]
+    suffix <- a[(k - j + 1):k]
+    if (all(prefix == suffix)) {
+      heads <- sum(prefix)
+      probability <- p^heads * (1 - p)^(j - heads)
+      expected <- expected + 1 / probability
+    }
+  }
+  expected
+}
+
+#----------------------------------------------------------------------
+# Helper: generate all k‑length binary patterns, fixed documented ordering
+# Output matrix: each row = pattern vector 0/1; rownames H/T labels
+# Order(k=3): TTT,TTH,THT,THH,HTT,HTH,HHT,HHH
+#----------------------------------------------------------------------
+all_patterns <- function(k = 3) {
+  if (!is.numeric(k) || length(k) != 1 || !is.finite(k) ||
+      k < 1 || k != floor(k)) {
+    stop("k must be a positive integer.")
+  }
+  patterns <- matrix(0L, nrow = 2^k, ncol = k)
+  ids <- 0:(2^k - 1)
+  labels <- rep("", nrow(patterns))
+  for (j in seq_len(k)) {
+    patterns[, j] <- (ids %/% 2^(k - j)) %% 2
+    labels <- paste0(labels, ifelse(patterns[, j] == 1, "H", "T"))
+  }
+  rownames(patterns) <- labels
+  patterns
+}
+
+#----------------------------------------------------------------------
+# Task5 pmat: full 2^k × 2^k duel win‑probability matrix
+# P[i,j] = probability pattern i beats pattern j; diagonal NA
+# Exploit P[j,i] = 1‑P[i,j] to halve simulation workload
+#----------------------------------------------------------------------
+pmat <- function(k = 3, p = 0.5, nreps = 10000) {
+  check_simulation(p, nreps)
+  patterns <- all_patterns(k)
+  n <- nrow(patterns)
+  P <- matrix(NA_real_, nrow = n, ncol = n,
+              dimnames = list(rownames(patterns), rownames(patterns)))
+  for (i in seq_len(n - 1)) {
+    for (j in seq.int(i + 1, n)) {
+      P[i, j] <- pwin(patterns[i, ], patterns[j, ], p, nreps)
+      P[j, i] <- 1 - P[i, j]
+    }
+  }
+  P
+}
+
+#----------------------------------------------------------------------
+# 5(a) helper: get best‑reply for each opponent pattern
+#----------------------------------------------------------------------
+best_replies <- function(P) {
+  reply <- integer(ncol(P))
+  for (j in seq_len(ncol(P))) reply[j] <- which.max(P[, j])
+  data.frame(
+    opponent = colnames(P),
+    best_reply = rownames(P)[reply],
+    win_probability = round(P[cbind(reply, seq_len(ncol(P)))], 4),
+    row.names = NULL
+  )
+}
+
+#----------------------------------------------------------------------
+# 5(b) helper: find approximately evenly‑matched pairs
+#----------------------------------------------------------------------
+balanced_pairs <- function(P, tolerance = 0.02) {
+  pairs <- which(upper.tri(P) & abs(P - 0.5) <= tolerance, arr.ind = TRUE)
+  data.frame(
+    pattern_a = rownames(P)[pairs[, 1]],
+    pattern_b = colnames(P)[pairs[, 2]],
+    probability_a_wins = round(P[pairs], 4),
+    row.names = NULL
+  )
+}
+
+#----------------------------------------------------------------------
+# 5(b) helper: BFS search shortest non‑transitive win cycle
+#----------------------------------------------------------------------
+find_cycle <- function(P, margin = 0.05) {
+  n <- nrow(P)
+  shortest <- integer(0)
+  for (start in seq_len(n)) {
+    queue <- start
+    parent <- rep(NA_integer_, n)
+    parent[start] <- 0L
+    position <- 1L
+    while (position <= length(queue)) {
+      current <- queue[position]
+      position <- position + 1L
+      neighbours <- which(P[current, ] > 0.5 + margin)
+      if (current != start && start %in% neighbours) {
+        path <- current
+        while (path[1] != start) path <- c(parent[path[1]], path)
+        path <- c(path, start)
+        if (length(shortest) == 0 || length(path) < length(shortest)) {
+          shortest <- path
+        }
+        break
+      }
+      for (next_node in neighbours) {
+        if (is.na(parent[next_node])) {
+          parent[next_node] <- current
+          queue <- c(queue, next_node)
+        }
+      }
+    }
+  }
+  shortest
+}
+
+show_cycle <- function(P, margin = 0.05) {
+  cycle <- find_cycle(P, margin)
+  if (length(cycle) == 0) {
+    cat("No cycle detected with every win probability above", 0.5 + margin, "\n")
+    return(invisible(NULL))
+  }
+  cat("Shortest detected cycle:",
+      paste(rownames(P)[cycle], collapse = " -> "), "\n")
+  from <- head(cycle, -1)
+  to <- tail(cycle, -1)
+  print(data.frame(
+    winner = rownames(P)[from], opponent = colnames(P)[to],
+    win_probability = round(P[cbind(from, to)], 4), row.names = NULL
+  ))
+  invisible(NULL)
+}
+
+#----------------------------------------------------------------------
+# 5(c) helper: find example pair with identical ewait but asymmetric duel
+#----------------------------------------------------------------------
+same_wait_example <- function(P, waits) {
+  difference <- abs(outer(waits, waits, "-"))
+  pairs <- which(upper.tri(P) & difference < 1e-10, arr.ind = TRUE)
+  if (nrow(pairs) == 0) return(NULL)
+  pair <- pairs[which.max(abs(P[pairs] - 0.5)), ]
+  if (P[pair[1], pair[2]] < 0.5) pair <- rev(pair)
+  data.frame(
+    winner = rownames(P)[pair[1]], opponent = colnames(P)[pair[2]],
+    expected_wait_both = waits[pair[1]],
+    win_probability = round(P[pair[1], pair[2]], 4), row.names = NULL
+  )
+}
+
+#----------------------------------------------------------------------
+# Experiment execution: Task4 validation, Task5 a/b/c, Task6 plot PDF, Task7 biased‑coin analysis
+#----------------------------------------------------------------------
+run_start <- proc.time()[["elapsed"]]
+set.seed(27)
+
+# Task1 manual test example
+examples <- data.frame(
+  stream = c("HTTHTHH", "TTTT", "HT", "HTHTH"),
+  pattern = rep("HTH", 4), expected = c(6, NA, NA, 3),
+  observed = c(firsthit(c(1, 0, 0, 1, 0, 1, 1), c(1, 0, 1)),
+               firsthit(c(0, 0, 0, 0), c(1, 0, 1)),
+               firsthit(c(1, 0), c(1, 0, 1)),
+               firsthit(c(1, 0, 1, 0, 1), c(1, 0, 1)))
+)
+cat("\nFirst occurrence examples\n")
+print(examples)
+
+# Task2, Task3 quick demo
+cat("\nOne shared‑stream duel: HTH versus THH\n")
+print(duel(c(1, 0, 1), c(0, 1, 1)))
+cat("Estimated P(HTH beats THH):", pwin(c(1, 0, 1), c(0, 1, 1)), "\n")
+
+# Task4 validation: exact ewait vs Monte‑Carlo simulation
+wait_patterns <- list(c(1, 1), c(0, 0), c(1, 0), c(0, 1),
+                      c(1, 0, 1), c(1, 0, 1))
+wait_p <- c(0.5, 0.5, 0.5, 0.5, 0.5, 0.7)
+wait_comparison <- data.frame(
+  pattern = c("HH", "TT", "HT", "TH", "HTH", "HTH"),
+  p = wait_p, exact = NA_real_, simulated_mean = NA_real_, mc_se = NA_real_
+)
+for (i in seq_along(wait_patterns)) {
+  waiting <- simulate_hits(wait_patterns[[i]], p = wait_p[i],
+                           nreps = 20000)[, "tosses"]
+  wait_comparison$exact[i] <- ewait(wait_patterns[[i]], wait_p[i])
+  wait_comparison$simulated_mean[i] <- mean(waiting)
+  wait_comparison$mc_se[i] <- sd(waiting) / sqrt(length(waiting))
+}
+cat("\nExact isolated waits and Monte Carlo estimates (20000 streams each)\n")
+print(wait_comparison, digits = 4)
+
+# Task5 k=3 fair coin analysis
+patterns <- all_patterns(3)
+P_fair <- pmat(k = 3, p = 0.5, nreps = 10000)
+
+cat("\n5(a) Best replies: fair coin, 10000 duels per pair\n")
+print(best_replies(P_fair))
+
+cat("\n5(b) Approximately balanced pairs (0.48 ~ 0.52 win prob)\n")
+print(balanced_pairs(P_fair))
+cat("\n5(b) Shortest non‑transitive cycle:\n")
+show_cycle(P_fair)
+
+#5(c) compare isolated waiting‑time ranking vs duel head‑to‑head performance
+waits <- numeric(nrow(patterns))
+for (i in seq_len(nrow(patterns))) waits[i] <- ewait(patterns[i, ])
+ranking <- data.frame(
+  pattern = rownames(patterns), expected_wait = waits,
+  mean_win_probability = rowMeans(P_fair, na.rm = TRUE), row.names = NULL
+)
+cat("\n5(c) Isolated waiting‑time order versus mean head‑to‑head win probability\n")
+print(ranking[order(ranking$expected_wait), ], digits = 4, row.names = FALSE)
+cat("\n5(c) Example: same expected wait but unequal duel performance\n")
+print(same_wait_example(P_fair, waits))
+
