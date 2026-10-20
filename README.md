@@ -11,7 +11,8 @@ This repository contains the group coursework for **Extended Statistics Programm
 ## Assignments
 
 - [Assignment 1](assignment1/): Music simulation using R, including the main script, dataset, and individual task scripts.
-
+- [Assignment 2](assignment2/): Coin-toss sequence duels using base R, including pattern matching, waiting-time analysis, win-probability simulations, and visualisations.
+  
 Each assignment is organised in a separate folder containing its code, supporting files, and documentation.
 
 ## Contributions
