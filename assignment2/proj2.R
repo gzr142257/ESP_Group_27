@@ -1,5 +1,3 @@
-# "How can this project be provided as one complete R script?"
-#
 # Sequence duels and the perils of independence
 #
 # Heads is 1 and tails is 0. The chance of heads is p.
