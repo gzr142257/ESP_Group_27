@@ -1,3 +1,14 @@
+#Group members:
+#Ruiqi Wang s2930743
+#Zirui Guo s2948295
+#Tong Shen s2939003
+#
+#Contributions:
+#Tong Shen (33.3%): Implemented Tasks 1-3.
+#Ruiqi Wang (33.3%): Implemented Task 4-5.
+#Tong Shen (33.3%): Implemented Task 6-7.
+#All members contributed to the GitHub repository setup, code review, and debugging.
+#
 # Sequence duels and the perils of independence
 #
 # Heads is 1 and tails is 0. The chance of heads is p.
